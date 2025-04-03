@@ -1,7 +1,6 @@
 import './App.css'
 import { useEffect, useState } from 'react'
 import { MapView } from './components/MapView'
-import { EquipmentWithLatestPosition } from './types/equipment'
 import {
   fetchEquipments,
   fetchPositionHistories,
@@ -9,12 +8,16 @@ import {
   getLatestPosition
 } from './services/equipmentService'
 
-
-
-
+type PositionData = {
+  name: string
+  model: string
+  date: string
+  lat: number
+  lng: number
+}
 
 function App() {
-  const [equipments, setEquipments] = useState<EquipmentWithLatestPosition[]>([])
+  const [positions, setPositions] = useState<PositionData[]>([])
 
   useEffect(() => {
     async function loadData() {
@@ -24,45 +27,28 @@ function App() {
         fetchEquipmentModels()
       ])
     
-      const withPositions = equipments.map(equipment => {
+      const result = equipments.map(equipment => {
         const position = getLatestPosition(equipment.id, histories)
         if (!position) return null
-    
+
         const model = models.find(m => m.id === equipment.equipmentModelId)
-    
+
         return {
-          id: equipment.id,
           name: equipment.name,
-          equipmentModelId: equipment.equipmentModelId,
-          position,
-          modelName: model?.name ?? 'Modelo desconhecido'
+          model: model?.name ?? 'Modelo desconhecido',
+          date: position.date,
+          lat: position.lat,
+          lng: position.lon,
         }
-      }).filter(Boolean) as (EquipmentWithLatestPosition & { modelName: string })[]
-    
-      setEquipments(withPositions)
+      }).filter(Boolean) as PositionData[]
+
+      setPositions(result)
     }
-    
 
     loadData()
   }, [])
 
-  return (
-    <>
-      {equipments.map((equipment) => (
-        <MapView
-        key={equipment.id}
-        position={{
-          name: equipment.name,
-          model: equipment.modelName,
-          date: equipment.position.date,
-          lat: equipment.position.lat,
-          lng: equipment.position.lon,
-        }}
-        
-      />
-      ))}
-    </>
-  )
+  return <MapView positions={positions} />
 }
 
 export default App

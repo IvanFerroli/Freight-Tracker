@@ -1,48 +1,48 @@
 import { useEffect, useRef } from 'react'
 import mapboxgl from 'mapbox-gl'
 
-
 mapboxgl.accessToken = 'pk.eyJ1IjoiaXZhbmZlcnJvbGkiLCJhIjoiY205MWdvdzM3MDByazJzb2RxNWM1aDByNiJ9.490tysNHeHNkTQWYjLhLsQ'
 
-type Props = {
-    position: {
-      name: string
-      model: string
-      date: string
-      lat: number
-      lng: number
-    }
-  }
-  
-  
+type PositionData = {
+  name: string
+  model: string
+  date: string
+  lat: number
+  lng: number
+}
 
-export function MapView({ position }: Props) {
+type Props = {
+  positions: PositionData[]
+}
+
+export function MapView({ positions }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!mapContainer.current) return
+    if (!mapContainer.current || positions.length === 0) return
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: [position.lng, position.lat],
+      center: [positions[0].lng, positions[0].lat],
       zoom: 13,
     })
 
-    new mapboxgl.Marker()
-      .setLngLat([position.lng, position.lat])
-      .setPopup(
-        new mapboxgl.Popup().setHTML(`
-          <strong>${position.name}</strong><br/>
-          Modelo: ${position.model}<br/>
-          Data: ${position.date}
-        `)
-      )
-      
-      .addTo(map)
+    positions.forEach((pos) => {
+      new mapboxgl.Marker()
+        .setLngLat([pos.lng, pos.lat])
+        .setPopup(
+          new mapboxgl.Popup().setHTML(`
+            <strong>${pos.name}</strong><br/>
+            Modelo: ${pos.model}<br/>
+            Data: ${pos.date}
+          `)
+        )
+        .addTo(map)
+    })
 
     return () => map.remove()
-  }, [position])
+  }, [positions])
 
   return <div ref={mapContainer} className="mapbox-container" />
 }
