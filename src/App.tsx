@@ -1,4 +1,4 @@
-import { useState } from 'react'
+/* import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -30,6 +30,16 @@ function App() {
       </p>
     </>
   )
+}
+
+export default App
+ */
+
+
+import { MapViewMapbox } from './components/MapView'
+
+function App() {
+  return <MapViewMapbox />
 }
 
 export default App
