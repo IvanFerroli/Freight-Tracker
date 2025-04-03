@@ -2,8 +2,15 @@ import './App.css'
 import { useEffect, useState } from 'react'
 import { MapView } from './components/MapView'
 import { EquipmentWithLatestPosition } from './types/equipment'
-import { fetchEquipments, fetchPositionHistories } from './services/equipmentService'
-import { getLatestPosition } from './services/equipmentService'
+import {
+  fetchEquipments,
+  fetchPositionHistories,
+  fetchEquipmentModels,
+  getLatestPosition
+} from './services/equipmentService'
+
+
+
 
 
 function App() {
@@ -11,27 +18,30 @@ function App() {
 
   useEffect(() => {
     async function loadData() {
-      const [equipments, histories] = await Promise.all([
+      const [equipments, histories, models] = await Promise.all([
         fetchEquipments(),
-        fetchPositionHistories()
+        fetchPositionHistories(),
+        fetchEquipmentModels()
       ])
-
+    
       const withPositions = equipments.map(equipment => {
         const position = getLatestPosition(equipment.id, histories)
-
         if (!position) return null
-      
+    
+        const model = models.find(m => m.id === equipment.equipmentModelId)
+    
         return {
           id: equipment.id,
           name: equipment.name,
           equipmentModelId: equipment.equipmentModelId,
-          position, // já é { lat, lon, date }
+          position,
+          modelName: model?.name ?? 'Modelo desconhecido'
         }
-      }).filter(Boolean) as EquipmentWithLatestPosition[]
-      
-
+      }).filter(Boolean) as (EquipmentWithLatestPosition & { modelName: string })[]
+    
       setEquipments(withPositions)
     }
+    
 
     loadData()
   }, [])
@@ -43,9 +53,12 @@ function App() {
         key={equipment.id}
         position={{
           name: equipment.name,
+          model: equipment.modelName,
+          date: equipment.position.date,
           lat: equipment.position.lat,
           lng: equipment.position.lon,
         }}
+        
       />
       ))}
     </>

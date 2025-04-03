@@ -7,10 +7,13 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiaXZhbmZlcnJvbGkiLCJhIjoiY205MWdvdzM3MDByazJzb
 type Props = {
     position: {
       name: string
+      model: string
+      date: string
       lat: number
       lng: number
     }
   }
+  
   
 
 export function MapView({ position }: Props) {
@@ -28,7 +31,14 @@ export function MapView({ position }: Props) {
 
     new mapboxgl.Marker()
       .setLngLat([position.lng, position.lat])
-      .setPopup(new mapboxgl.Popup().setHTML(`<h3>${position.name}</h3>`))
+      .setPopup(
+        new mapboxgl.Popup().setHTML(`
+          <strong>${position.name}</strong><br/>
+          Modelo: ${position.model}<br/>
+          Data: ${position.date}
+        `)
+      )
+      
       .addTo(map)
 
     return () => map.remove()

@@ -4,6 +4,11 @@ export interface Equipment {
     equipmentModelId: string
   }
   
+  export interface EquipmentModel {
+    id: string
+    name: string
+  }
+  
   export interface Position {
     date: string
     lat: number
@@ -17,7 +22,7 @@ export interface Equipment {
   
   export interface EquipmentWithLatestPosition extends Equipment {
     position: Position
+    modelName: string
   }
-  
   
   
