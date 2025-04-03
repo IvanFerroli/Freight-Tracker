@@ -1,12 +1,17 @@
 import { useEffect, useRef } from 'react'
 import mapboxgl from 'mapbox-gl'
-import { EquipmentPosition } from '../types/equipment'
+
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiaXZhbmZlcnJvbGkiLCJhIjoiY205MWdvdzM3MDByazJzb2RxNWM1aDByNiJ9.490tysNHeHNkTQWYjLhLsQ'
 
 type Props = {
-  position: EquipmentPosition
-}
+    position: {
+      name: string
+      lat: number
+      lng: number
+    }
+  }
+  
 
 export function MapView({ position }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)

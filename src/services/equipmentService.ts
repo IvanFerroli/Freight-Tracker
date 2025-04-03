@@ -5,7 +5,16 @@ export async function fetchEquipments(): Promise<Equipment[]> {
   return res.json()
 }
 
-export async function fetchPositionHistory(): Promise<EquipmentPositionHistory[]> {
+export async function fetchPositionHistories(): Promise<EquipmentPositionHistory[]> {
   const res = await fetch('/data/equipmentPositionHistory.json')
   return res.json()
 }
+
+export function getLatestPosition(
+    equipmentId: string,
+    histories: EquipmentPositionHistory[]
+  ) {
+    const history = histories.find((h) => h.equipmentId === equipmentId)
+    return history?.positions.at(-1) ?? null
+  }
+  

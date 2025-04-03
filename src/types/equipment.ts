@@ -15,10 +15,9 @@ export interface Equipment {
     positions: Position[]
   }
   
-  // Adiciona isso no final 👇
-  export type EquipmentPosition = {
-    name: string
-    lat: number
-    lng: number
+  export interface EquipmentWithLatestPosition extends Equipment {
+    position: Position
   }
+  
+  
   
