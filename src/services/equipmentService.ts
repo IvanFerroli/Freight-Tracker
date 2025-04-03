@@ -2,6 +2,8 @@ import {
     Equipment,
     EquipmentPositionHistory,
     EquipmentModel,
+    EquipmentState,
+    EquipmentStateHistory,
   } from '../types/equipment'
   
   export async function fetchEquipments(): Promise<Equipment[]> {
@@ -19,6 +21,16 @@ import {
     return res.json()
   }
   
+  export async function fetchEquipmentStates(): Promise<EquipmentState[]> {
+    const res = await fetch('/data/equipmentState.json')
+    return res.json()
+  }
+  
+  export async function fetchEquipmentStateHistories(): Promise<EquipmentStateHistory[]> {
+    const res = await fetch('/data/equipmentStateHistory.json')
+    return res.json()
+  }
+  
   export function getLatestPosition(
     equipmentId: string,
     histories: EquipmentPositionHistory[]
@@ -27,4 +39,13 @@ import {
     return history?.positions.at(-1) ?? null
   }
   
+  export function getLatestState(
+    equipmentId: string,
+    histories: EquipmentStateHistory[],
+    states: EquipmentState[]
+  ) {
+    const history = histories.find((h) => h.equipmentId === equipmentId)
+    const stateId = history?.states.at(-1)?.equipmentStateId
+    return states.find((s) => s.id === stateId) ?? null
+  }
   

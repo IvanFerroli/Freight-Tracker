@@ -9,6 +9,8 @@ type PositionData = {
   date: string
   lat: number
   lng: number
+  stateColor: string,
+  stateName: string
 }
 
 type Props = {
@@ -29,13 +31,14 @@ export function MapView({ positions }: Props) {
     })
 
     positions.forEach((pos) => {
-      new mapboxgl.Marker()
+      new mapboxgl.Marker({ color: pos.stateColor })
         .setLngLat([pos.lng, pos.lat])
         .setPopup(
           new mapboxgl.Popup().setHTML(`
             <strong>${pos.name}</strong><br/>
             Modelo: ${pos.model}<br/>
-            Data: ${pos.date}
+            Data: ${pos.date}<br/>
+            <span style="color:${pos.stateColor}">Estado: ${pos.stateName}</span>
           `)
         )
         .addTo(map)
