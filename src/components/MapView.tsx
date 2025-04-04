@@ -22,12 +22,13 @@ export function MapView({ positions }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!mapContainer.current || positions.length === 0) return
+    if (!mapContainer.current) return
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: [positions[0].lng, positions[0].lat],
+      center: positions.length > 0 ? [positions[0].lng, positions[0].lat] : [-51.9253, -14.2350], // centro do Brasil
+
       zoom: 13,
     })
 

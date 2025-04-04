@@ -27,11 +27,17 @@ export type FiltersState = {
   model: string
   state: string
   name: string
+  modelText: string
 }
 
 function App() {
   const [positions, setPositions] = useState<PositionData[]>([])
-  const [filters, setFilters] = useState<FiltersState>({ model: 'Todos', state: 'Todos', name: '' })
+  const [filters, setFilters] = useState<FiltersState>({
+    model: 'Todos',
+    state: 'Todos',
+    name: '',
+    modelText: ''
+  })
 
   useEffect(() => {
     async function loadData() {
@@ -93,27 +99,30 @@ function App() {
 
   const filtered = positions.filter((pos) => {
     const matchesModel = filters.model === 'Todos' || pos.model === filters.model
+    const matchesModelText = pos.model.toLowerCase().includes(filters.modelText.toLowerCase())
     const matchesState = filters.state === 'Todos' || pos.stateName === filters.state
     const matchesName = pos.name.toLowerCase().includes(filters.name.toLowerCase())
-    return matchesModel && matchesState && matchesName
+    return matchesModel && matchesModelText && matchesState && matchesName
   })
 
   return (
     <>
-      {positions.length === 0 && <p>Carregando dados...</p>}
-
-      <Filters
-        models={Array.from(new Set(positions.map((p) => p.model)))}
-        states={['Operando', 'Parado', 'Manutenção']}
-        filters={filters}
-        setFilters={setFilters}
-      />
-
-      <MapView positions={filtered} />
+      {positions.length === 0 ? (
+        <p>Carregando dados...</p>
+      ) : (
+        <>
+          <Filters
+            models={Array.from(new Set(positions.map((p) => p.model)))}
+            states={['Operando', 'Parado', 'Manutenção']}
+            filters={filters}
+            setFilters={setFilters}
+          />
+          <MapView positions={filtered} />
+        </>
+      )}
     </>
   )
-
-
+  
 }
 
 export default App

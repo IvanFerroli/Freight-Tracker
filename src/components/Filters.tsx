@@ -18,7 +18,10 @@ export function Filters({ models, states, filters, setFilters }: Props) {
   }
 
   return (
-    <div className="filters" style={{ margin: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+    <div
+      className="filters"
+      style={{ margin: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}
+    >
       <label>
         Modelo:&nbsp;
         <select name="model" value={filters.model} onChange={handleChange}>
@@ -46,7 +49,7 @@ export function Filters({ models, states, filters, setFilters }: Props) {
           name="name"
           value={filters.name}
           onChange={handleChange}
-          placeholder="Pesquisar por nome..."
+          placeholder="ex: GT-2003"
         />
       </label>
     </div>
