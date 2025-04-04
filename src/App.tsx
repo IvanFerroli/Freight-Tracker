@@ -1,6 +1,7 @@
 import './App.css'
 import { useEffect, useState } from 'react'
 import { MapView } from './components/MapView'
+import { Filters } from './components/Filters'
 import {
   fetchEquipments,
   fetchPositionHistories,
@@ -11,7 +12,7 @@ import {
   getLatestState
 } from './services/equipmentService'
 
-type PositionData = {
+export type PositionData = {
   name: string
   model: string
   date: string
@@ -22,8 +23,15 @@ type PositionData = {
   stateHistory?: { name: string; date: string }[]
 }
 
+export type FiltersState = {
+  model: string
+  state: string
+  name: string
+}
+
 function App() {
   const [positions, setPositions] = useState<PositionData[]>([])
+  const [filters, setFilters] = useState<FiltersState>({ model: 'Todos', state: 'Todos', name: '' })
 
   useEffect(() => {
     async function loadData() {
@@ -51,7 +59,6 @@ function App() {
           }
         }) ?? []
 
-
         const stateName = state?.name ?? 'Estado desconhecido'
         const stateColor = state?.color ?? '#e74c3c'
 
@@ -76,7 +83,6 @@ function App() {
           stateColor: stateColor,
           stateHistory: fullStateHistory,
         }
-        
       }).filter(Boolean) as PositionData[]
 
       setPositions(result)
@@ -85,7 +91,27 @@ function App() {
     loadData()
   }, [])
 
-  return <MapView positions={positions} />
+  const filtered = positions.filter((pos) => {
+    const matchesModel = filters.model === 'Todos' || pos.model === filters.model
+    const matchesState = filters.state === 'Todos' || pos.stateName === filters.state
+    const matchesName = pos.name.toLowerCase().includes(filters.name.toLowerCase())
+    return matchesModel && matchesState && matchesName
+  })
+
+  return (
+    <>
+      {positions.length === 0 && <p>Carregando dados...</p>}
+  
+      <Filters
+        positions={positions}
+        filters={filters}
+        setFilters={setFilters}
+      />
+      <MapView positions={filtered} />
+    </>
+  )
+  
+  
 }
 
 export default App
