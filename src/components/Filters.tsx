@@ -45,7 +45,12 @@ export function Filters({ models, states, filters, names, setFilters }: Props) {
     >
       <label>
         Modelo:&nbsp;
-        <select name="model" value={filters.model} onChange={handleChange}>
+        <select
+          name="model"
+          value={filters.model}
+          onChange={handleChange}
+          title="Filtra os equipamentos pelo modelo"
+        >
           <option value="Todos">Todos</option>
           {models.map((model) => (
             <option key={model} value={model}>{model}</option>
@@ -55,7 +60,12 @@ export function Filters({ models, states, filters, names, setFilters }: Props) {
 
       <label>
         Estado:&nbsp;
-        <select name="state" value={filters.state} onChange={handleChange}>
+        <select
+          name="state"
+          value={filters.state}
+          onChange={handleChange}
+          title="Filtra os equipamentos pelo estado atual"
+        >
           <option value="Todos">Todos</option>
           {states.map((state) => (
             <option key={state} value={state}>{state}</option>
@@ -72,7 +82,8 @@ export function Filters({ models, states, filters, names, setFilters }: Props) {
           onChange={handleChange}
           placeholder="ex: GT-2003"
           onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 150)} // evita sumir instantaneamente
+          onBlur={() => setTimeout(() => setFocused(false), 150)}
+          title="Pesquise pelo nome do equipamento (ex: GT-2003)"
         />
         {focused && filteredSuggestions.length > 0 && (
           <ul
