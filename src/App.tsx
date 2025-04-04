@@ -32,13 +32,17 @@ export type FiltersState = {
 
 function App() {
   const [positions, setPositions] = useState<PositionData[]>([])
-  const [filters, setFilters] = useState<FiltersState>({
-    model: 'Todos',
-    state: 'Todos',
-    name: '',
-    modelText: ''
+  const [filters, setFilters] = useState<FiltersState>(() => {
+    const saved = localStorage.getItem('filters')
+    return saved
+      ? JSON.parse(saved)
+      : { model: 'Todos', state: 'Todos', name: '', modelText: '' }
   })
   const [highlightName, setHighlightName] = useState<string | null>(null)
+
+  useEffect(() => {
+    localStorage.setItem('filters', JSON.stringify(filters))
+  }, [filters])
 
   useEffect(() => {
     async function loadData() {
