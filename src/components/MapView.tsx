@@ -11,6 +11,7 @@ type PositionData = {
   lng: number
   stateColor: string,
   stateName: string
+  stateHistory?: { name: string; date: string }[]
 }
 
 type Props = {
@@ -38,7 +39,17 @@ export function MapView({ positions }: Props) {
             <strong>${pos.name}</strong><br/>
             Modelo: ${pos.model}<br/>
             Data: ${pos.date}<br/>
-            <span style="color:${pos.stateColor}">Estado: ${pos.stateName}</span>
+            <span style="color:${pos.stateColor}">Estado: ${pos.stateName}</span><br/>
+            ${
+              pos.stateHistory?.length
+                ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
+                    <strong>Histórico:</strong><br/>
+                    ${pos.stateHistory
+                      .map(entry => `${entry.date} - ${entry.name}`)
+                      .join('<br/>')}
+                  </div>`
+                : ''
+            }
           `)
         )
         .addTo(map)

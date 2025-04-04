@@ -19,6 +19,7 @@ type PositionData = {
   lng: number
   stateColor: string
   stateName: string
+  stateHistory?: { name: string; date: string }[]
 }
 
 function App() {
@@ -40,6 +41,16 @@ function App() {
 
         const model = models.find(m => m.id === equipment.equipmentModelId)
         const state = getLatestState(equipment.id, stateHistories, states)
+
+        const equipmentStateHistory = stateHistories.find(h => h.equipmentId === equipment.id)
+        const fullStateHistory = equipmentStateHistory?.states.map(entry => {
+          const s = states.find(state => state.id === entry.equipmentStateId)
+          return {
+            name: s?.name ?? 'Estado desconhecido',
+            date: entry.date,
+          }
+        }) ?? []
+
 
         const stateName = state?.name ?? 'Estado desconhecido'
         const stateColor = state?.color ?? '#e74c3c'
@@ -63,7 +74,9 @@ function App() {
           lng: position.lon,
           stateName: displayStateName,
           stateColor: stateColor,
+          stateHistory: fullStateHistory,
         }
+        
       }).filter(Boolean) as PositionData[]
 
       setPositions(result)
