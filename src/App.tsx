@@ -21,7 +21,10 @@ export type PositionData = {
   stateColor: string
   stateName: string
   stateHistory?: { name: string; date: string }[]
+  productivity?: number
+  estimatedEarnings?: number
 }
+
 
 export type FiltersState = {
   model: string
@@ -84,6 +87,44 @@ function App() {
           displayStateName = 'Estado Desconhecido'
         }
 
+        // Se houver histórico, vamos calcular
+        let totalHoras = 0
+        let horasOperando = 0
+        let ganhoEstimado = 0
+
+        if (fullStateHistory.length >= 2) {
+          for (let i = 0; i < fullStateHistory.length - 1; i++) {
+            const atual = new Date(fullStateHistory[i].date)
+            const proxima = new Date(fullStateHistory[i + 1].date)
+
+            const horas = (proxima.getTime() - atual.getTime()) / 1000 / 60 / 60
+            totalHoras += horas
+
+            if (fullStateHistory[i].name === 'Operando') {
+              horasOperando += horas
+              ganhoEstimado += horas * 100
+            } else if (fullStateHistory[i].name === 'Parado') {
+              ganhoEstimado += horas * 30
+            }
+            // Manutenção = 0
+          }
+        }
+
+        const produtividade = totalHoras > 0 ? (horasOperando / totalHoras) * 100 : 0
+
+        // Formatar histórico para popup legível
+        const formattedHistory = fullStateHistory.map(entry => ({
+          name: entry.name,
+          date: new Date(entry.date).toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        }))
+
+
         return {
           name: equipment.name,
           model: model?.name ?? 'Modelo desconhecido',
@@ -92,7 +133,10 @@ function App() {
           lng: position.lon,
           stateName: displayStateName,
           stateColor: stateColor,
-          stateHistory: fullStateHistory,
+          stateHistory: formattedHistory,
+          productivity: Math.round(produtividade),
+          estimatedEarnings: Math.round(ganhoEstimado)
+
         }
       }).filter(Boolean) as PositionData[]
 

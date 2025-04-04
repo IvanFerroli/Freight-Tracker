@@ -33,6 +33,14 @@ export function MapView({ positions, highlightName }: Props) {
     })
 
     positions.forEach((pos) => {
+      const formattedDate = new Date(pos.date).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+
       new mapboxgl.Marker({
         color: highlightName === pos.name ? '#000000' : pos.stateColor
       })
@@ -41,17 +49,16 @@ export function MapView({ positions, highlightName }: Props) {
           new mapboxgl.Popup().setHTML(`
             <strong>${pos.name}</strong><br/>
             Modelo: ${pos.model}<br/>
-            Data: ${pos.date}<br/>
+            Data: ${formattedDate}<br/>
             <span style="color:${pos.stateColor}">Estado: ${pos.stateName}</span><br/>
-            ${
-              pos.stateHistory?.length
-                ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
+            ${pos.stateHistory?.length
+              ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
                     <strong>Histórico:</strong><br/>
                     ${pos.stateHistory
-                      .map(entry => `${entry.date} - ${entry.name}`)
-                      .join('<br/>')}
+                .map(entry => `${entry.date} - ${entry.name}`)
+                .join('<br/>')}
                   </div>`
-                : ''
+              : ''
             }
           `)
         )
@@ -61,6 +68,7 @@ export function MapView({ positions, highlightName }: Props) {
         map.flyTo({ center: [pos.lng, pos.lat], zoom: 15 })
       }
     })
+
 
     return () => map.remove()
   }, [positions, highlightName])
