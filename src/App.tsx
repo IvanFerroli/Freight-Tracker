@@ -38,6 +38,7 @@ function App() {
     name: '',
     modelText: ''
   })
+  const [highlightName, setHighlightName] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -105,6 +106,14 @@ function App() {
     return matchesModel && matchesModelText && matchesState && matchesName
   })
 
+  useEffect(() => {
+    if (filters.name.trim().length > 0 && filtered.length === 1) {
+      setHighlightName(filtered[0].name)
+    } else {
+      setHighlightName(null)
+    }
+  }, [filters.name, filtered])
+
   return (
     <>
       {positions.length === 0 ? (
@@ -117,12 +126,11 @@ function App() {
             filters={filters}
             setFilters={setFilters}
           />
-          <MapView positions={filtered} />
+          <MapView positions={filtered} highlightName={highlightName} />
         </>
       )}
     </>
   )
-  
 }
 
 export default App

@@ -9,16 +9,17 @@ type PositionData = {
   date: string
   lat: number
   lng: number
-  stateColor: string,
+  stateColor: string
   stateName: string
   stateHistory?: { name: string; date: string }[]
 }
 
 type Props = {
   positions: PositionData[]
+  highlightName?: string | null
 }
 
-export function MapView({ positions }: Props) {
+export function MapView({ positions, highlightName }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -27,13 +28,14 @@ export function MapView({ positions }: Props) {
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: positions.length > 0 ? [positions[0].lng, positions[0].lat] : [-51.9253, -14.2350], // centro do Brasil
-
+      center: positions.length > 0 ? [positions[0].lng, positions[0].lat] : [-51.9253, -14.2350],
       zoom: 13,
     })
 
     positions.forEach((pos) => {
-      new mapboxgl.Marker({ color: pos.stateColor })
+      new mapboxgl.Marker({
+        color: highlightName === pos.name ? '#000000' : pos.stateColor
+      })
         .setLngLat([pos.lng, pos.lat])
         .setPopup(
           new mapboxgl.Popup().setHTML(`
@@ -54,10 +56,14 @@ export function MapView({ positions }: Props) {
           `)
         )
         .addTo(map)
+
+      if (highlightName === pos.name) {
+        map.flyTo({ center: [pos.lng, pos.lat], zoom: 15 })
+      }
     })
 
     return () => map.remove()
-  }, [positions])
+  }, [positions, highlightName])
 
   return <div ref={mapContainer} className="mapbox-container" />
 }
