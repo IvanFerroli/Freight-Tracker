@@ -125,6 +125,7 @@ function App() {
             states={['Operando', 'Parado', 'Manutenção']}
             filters={filters}
             setFilters={setFilters}
+            names={Array.from(new Set(positions.map((p) => p.name)))}
           />
           <MapView positions={filtered} highlightName={highlightName} />
         </>
