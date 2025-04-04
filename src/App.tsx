@@ -101,17 +101,19 @@ function App() {
   return (
     <>
       {positions.length === 0 && <p>Carregando dados...</p>}
-  
+
       <Filters
-        positions={positions}
+        models={Array.from(new Set(positions.map((p) => p.model)))}
+        states={['Operando', 'Parado', 'Manutenção']}
         filters={filters}
         setFilters={setFilters}
       />
+
       <MapView positions={filtered} />
     </>
   )
-  
-  
+
+
 }
 
 export default App

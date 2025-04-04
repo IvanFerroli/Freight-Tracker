@@ -1,16 +1,14 @@
 import { ChangeEvent } from 'react'
-import { PositionData, FiltersState } from '../App'
+import { FiltersState } from '../App'
 
 type Props = {
-  positions: PositionData[]
+  models: string[]
+  states: string[]
   filters: FiltersState
   setFilters: React.Dispatch<React.SetStateAction<FiltersState>>
 }
 
-export function Filters({ positions, filters, setFilters }: Props) {
-  const models = Array.from(new Set(positions.map((p) => p.model)))
-  const states = Array.from(new Set(positions.map((p) => p.stateName)))
-
+export function Filters({ models, states, filters, setFilters }: Props) {
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFilters((prev) => ({
