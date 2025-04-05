@@ -1,5 +1,6 @@
 import { ChangeEvent, useState } from 'react'
 import { FiltersState } from '../App'
+import '../styles/filters.css'
 
 type Props = {
   models: string[]
@@ -39,10 +40,7 @@ export function Filters({ models, states, filters, names, setFilters }: Props) {
     : []
 
   return (
-    <div
-      className="filters"
-      style={{ margin: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', position: 'relative' }}
-    >
+    <div className="filters-container">
       <label>
         Modelo:&nbsp;
         <select
@@ -73,7 +71,7 @@ export function Filters({ models, states, filters, names, setFilters }: Props) {
         </select>
       </label>
 
-      <label style={{ position: 'relative' }}>
+      <label className="name-input-wrapper">
         Nome:&nbsp;
         <input
           type="text"
@@ -86,25 +84,11 @@ export function Filters({ models, states, filters, names, setFilters }: Props) {
           title="Pesquise pelo nome do equipamento (ex: GT-2003)"
         />
         {focused && filteredSuggestions.length > 0 && (
-          <ul
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              background: 'white',
-              listStyle: 'none',
-              padding: '0.5rem',
-              margin: 0,
-              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
-              zIndex: 20,
-              width: '100%',
-              borderRadius: '4px',
-            }}
-          >
+          <ul className="suggestions-dropdown">
             {filteredSuggestions.map(name => (
               <li
                 key={name}
-                style={{ padding: '0.25rem 0', cursor: 'pointer' }}
+                className="suggestion-item"
                 onMouseDown={() =>
                   setFilters(prev => ({ ...prev, name }))
                 }
