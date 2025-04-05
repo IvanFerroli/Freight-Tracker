@@ -2,6 +2,7 @@ import './App.css'
 import { useEffect, useState } from 'react'
 import { MapView } from './components/MapView'
 import { Filters } from './components/Filters'
+import filterIcon from './assets/img/filter.png'
 import {
   fetchEquipments,
   fetchPositionHistories,
@@ -25,7 +26,6 @@ export type PositionData = {
   estimatedEarnings?: number
 }
 
-
 export type FiltersState = {
   model: string
   state: string
@@ -34,6 +34,7 @@ export type FiltersState = {
 }
 
 function App() {
+  const [showFilters, setShowFilters] = useState(true)
   const [positions, setPositions] = useState<PositionData[]>([])
   const [filters, setFilters] = useState<FiltersState>(() => {
     const saved = localStorage.getItem('filters')
@@ -87,7 +88,6 @@ function App() {
           displayStateName = 'Estado Desconhecido'
         }
 
-        // Se houver histórico, vamos calcular
         let totalHoras = 0
         let horasOperando = 0
         let ganhoEstimado = 0
@@ -96,7 +96,6 @@ function App() {
           for (let i = 0; i < fullStateHistory.length - 1; i++) {
             const atual = new Date(fullStateHistory[i].date)
             const proxima = new Date(fullStateHistory[i + 1].date)
-
             const horas = (proxima.getTime() - atual.getTime()) / 1000 / 60 / 60
             totalHoras += horas
 
@@ -106,13 +105,11 @@ function App() {
             } else if (fullStateHistory[i].name === 'Parado') {
               ganhoEstimado += horas * 30
             }
-            // Manutenção = 0
           }
         }
 
         const produtividade = totalHoras > 0 ? (horasOperando / totalHoras) * 100 : 0
 
-        // Formatar histórico para popup legível
         const formattedHistory = fullStateHistory.map(entry => ({
           name: entry.name,
           date: new Date(entry.date).toLocaleString('pt-BR', {
@@ -123,7 +120,6 @@ function App() {
             minute: '2-digit'
           })
         }))
-
 
         return {
           name: equipment.name,
@@ -136,7 +132,6 @@ function App() {
           stateHistory: formattedHistory,
           productivity: Math.round(produtividade),
           estimatedEarnings: Math.round(ganhoEstimado)
-
         }
       }).filter(Boolean) as PositionData[]
 
@@ -168,13 +163,25 @@ function App() {
         <p>Carregando dados...</p>
       ) : (
         <>
+          {/* Ícone toggle de filtros */}
+          <img
+            src={filterIcon}
+            alt="Toggle filtros"
+            className="filter-icon-toggle"
+            onClick={() => setShowFilters(prev => !prev)}
+          />
+
+          {/* Componente de Filtros (condicional) */}
           <Filters
             models={Array.from(new Set(positions.map((p) => p.model)))}
             states={['Operando', 'Parado', 'Manutenção']}
             filters={filters}
             setFilters={setFilters}
             names={Array.from(new Set(positions.map((p) => p.name)))}
+            show={showFilters}
           />
+
+          {/* Mapa */}
           <MapView positions={filtered} highlightName={highlightName} />
         </>
       )}

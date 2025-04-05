@@ -8,10 +8,13 @@ type Props = {
   names: string[]
   filters: FiltersState
   setFilters: React.Dispatch<React.SetStateAction<FiltersState>>
+  show: boolean
 }
 
-export function Filters({ models, states, filters, names, setFilters }: Props) {
+export function Filters({ models, states, filters, names, setFilters, show }: Props) {
   const [focused, setFocused] = useState(false)
+
+  if (!show) return null
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
