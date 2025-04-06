@@ -36,6 +36,7 @@ export type FiltersState = {
 
 function App() {
   const [showFilters, setShowFilters] = useState(true)
+  const [showRoutes, setShowRoutes] = useState(true)
   const [positions, setPositions] = useState<PositionData[]>([])
   const [filters, setFilters] = useState<FiltersState>(() => {
     const saved = localStorage.getItem('filters')
@@ -182,9 +183,15 @@ function App() {
             setFilters={setFilters}
             names={Array.from(new Set(positions.map((p) => p.name)))}
             show={showFilters}
+            showRoutes={showRoutes}
+            setShowRoutes={setShowRoutes}
           />
 
-          <MapView positions={filtered} highlightName={highlightName} />
+          <MapView
+            positions={filtered}
+            highlightName={highlightName}
+            showRoutes={showRoutes}
+          />
         </>
       )}
     </>

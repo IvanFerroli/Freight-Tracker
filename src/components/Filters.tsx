@@ -9,9 +9,20 @@ type Props = {
   filters: FiltersState
   setFilters: React.Dispatch<React.SetStateAction<FiltersState>>
   show: boolean
+  showRoutes?: boolean
+  setShowRoutes?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export function Filters({ models, states, filters, names, setFilters, show }: Props) {
+export function Filters({
+  models,
+  states,
+  filters,
+  names,
+  setFilters,
+  show,
+  showRoutes,
+  setShowRoutes
+}: Props) {
   const [focused, setFocused] = useState(false)
 
   if (!show) return null
@@ -102,6 +113,17 @@ export function Filters({ models, states, filters, names, setFilters, show }: Pr
           </ul>
         )}
       </label>
+
+      {typeof showRoutes === 'boolean' && typeof setShowRoutes === 'function' && (
+        <label>
+          <input
+            type="checkbox"
+            checked={showRoutes}
+            onChange={(e) => setShowRoutes(e.target.checked)}
+          />
+          &nbsp;Mostrar rotas
+        </label>
+      )}
     </div>
   )
 }

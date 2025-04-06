@@ -18,6 +18,7 @@ type PositionData = {
 type Props = {
   positions: PositionData[]
   highlightName?: string | null
+  showRoutes: boolean
 }
 
 const hourlyRates: Record<string, number> = {
@@ -65,7 +66,7 @@ function calculateProductivityAndEarnings(history: { name: string; date: string 
   return { productivity, ganho }
 }
 
-export function MapView({ positions, highlightName }: Props) {
+export function MapView({ positions, highlightName, showRoutes }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -96,17 +97,17 @@ export function MapView({ positions, highlightName }: Props) {
         const historyHTML = pos.stateHistory?.length
           ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
               ${pos.stateHistory
-            .map(entry => {
-              const formatted = new Date(entry.date).toLocaleString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })
-              return `${formatted} - ${entry.name}`
-            })
-            .join('<br/>')}
+                .map(entry => {
+                  const formatted = new Date(entry.date).toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                  return `${formatted} - ${entry.name}`
+                })
+                .join('<br/>')}
             </div>`
           : ''
 
@@ -137,7 +138,7 @@ export function MapView({ positions, highlightName }: Props) {
           map.flyTo({ center: [pos.lng, pos.lat], zoom: 15 })
         }
 
-        if (pos.path && pos.path.length > 1) {
+        if (showRoutes && pos.path && pos.path.length > 1) {
           const coordinates = pos.path.map(p => [p.lon, p.lat])
 
           map.addSource(`route-${idx}`, {
@@ -170,7 +171,7 @@ export function MapView({ positions, highlightName }: Props) {
     })
 
     return () => map.remove()
-  }, [positions, highlightName])
+  }, [positions, highlightName, showRoutes])
 
   return <div ref={mapContainer} className="mapbox-container" />
 }
