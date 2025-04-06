@@ -24,6 +24,7 @@ export type PositionData = {
   stateHistory?: { name: string; date: string }[]
   productivity?: number
   estimatedEarnings?: number
+  path?: { lat: number; lon: number; date: string }[]
 }
 
 export type FiltersState = {
@@ -61,6 +62,9 @@ function App() {
       const result = equipments.map(equipment => {
         const position = getLatestPosition(equipment.id, histories)
         if (!position) return null
+
+        const historyEntry = histories.find(h => h.equipmentId === equipment.id)
+        const path = historyEntry?.positions ?? []
 
         const model = models.find(m => m.id === equipment.equipmentModelId)
         const state = getLatestState(equipment.id, stateHistories, states)
@@ -131,7 +135,8 @@ function App() {
           stateColor: stateColor,
           stateHistory: formattedHistory,
           productivity: Math.round(produtividade),
-          estimatedEarnings: Math.round(ganhoEstimado)
+          estimatedEarnings: Math.round(ganhoEstimado),
+          path: path
         }
       }).filter(Boolean) as PositionData[]
 
@@ -163,7 +168,6 @@ function App() {
         <p>Carregando dados...</p>
       ) : (
         <>
-          {/* Ícone toggle de filtros */}
           <img
             src={filterIcon}
             alt="Toggle filtros"
@@ -171,7 +175,6 @@ function App() {
             onClick={() => setShowFilters(prev => !prev)}
           />
 
-          {/* Componente de Filtros (condicional) */}
           <Filters
             models={Array.from(new Set(positions.map((p) => p.model)))}
             states={['Operando', 'Parado', 'Manutenção']}
@@ -181,7 +184,6 @@ function App() {
             show={showFilters}
           />
 
-          {/* Mapa */}
           <MapView positions={filtered} highlightName={highlightName} />
         </>
       )}

@@ -12,6 +12,7 @@ type PositionData = {
   stateColor: string
   stateName: string
   stateHistory?: { name: string; date: string }[]
+  path?: { lat: number; lon: number; date: string }[]
 }
 
 type Props = {
@@ -64,7 +65,6 @@ function calculateProductivityAndEarnings(history: { name: string; date: string 
   return { productivity, ganho }
 }
 
-
 export function MapView({ positions, highlightName }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)
 
@@ -78,63 +78,95 @@ export function MapView({ positions, highlightName }: Props) {
       zoom: 13,
     })
 
-    positions.forEach((pos) => {
-      const formattedDate = new Date(pos.date).toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+    map.on('load', () => {
+      positions.forEach((pos, idx) => {
+        const formattedDate = new Date(pos.date).toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
 
-      const { productivity, ganho } = pos.stateHistory?.length
-        ? calculateProductivityAndEarnings(pos.stateHistory)
-        : { productivity: 0, ganho: 0 }
+        const { productivity, ganho } = pos.stateHistory?.length
+          ? calculateProductivityAndEarnings(pos.stateHistory)
+          : { productivity: 0, ganho: 0 }
 
-      const historyTitle = pos.stateHistory?.length ? `<strong>Histórico:</strong><br/>` : ''
-      const historyHTML = pos.stateHistory?.length
-        ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
-            ${pos.stateHistory
-          .map(entry => {
-            const formatted = new Date(entry.date).toLocaleString('pt-BR', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
+        const historyTitle = pos.stateHistory?.length ? `<strong>Histórico:</strong><br/>` : ''
+        const historyHTML = pos.stateHistory?.length
+          ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
+              ${pos.stateHistory
+            .map(entry => {
+              const formatted = new Date(entry.date).toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+              return `${formatted} - ${entry.name}`
             })
-            return `${formatted} - ${entry.name}`
-          })
-          .join('<br/>')}
-          </div>`
-        : ''
+            .join('<br/>')}
+            </div>`
+          : ''
 
-      const extraInfo = `
-        <br/><strong>Produtividade:</strong> ${productivity}%<br/>
-        <strong>Ganho estimado:</strong> ${ganho.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        const extraInfo = `
+          <br/><strong>Produtividade:</strong> ${productivity}%<br/>
+          <strong>Ganho estimado:</strong> ${ganho.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
 <br/>
-      `
+        `
 
-      new mapboxgl.Marker({
-        color: highlightName === pos.name ? '#000000' : pos.stateColor
+        new mapboxgl.Marker({
+          color: highlightName === pos.name ? '#000000' : pos.stateColor
+        })
+          .setLngLat([pos.lng, pos.lat])
+          .setPopup(
+            new mapboxgl.Popup().setHTML(`
+              <strong>${pos.name}</strong><br/>
+              Modelo: ${pos.model}<br/>
+              Data: ${formattedDate}<br/>
+              <span style="color:${pos.stateColor}">Estado: ${pos.stateName}</span><br/>
+              ${extraInfo}
+              ${historyTitle}
+              ${historyHTML}
+            `)
+          )
+          .addTo(map)
+
+        if (highlightName === pos.name) {
+          map.flyTo({ center: [pos.lng, pos.lat], zoom: 15 })
+        }
+
+        if (pos.path && pos.path.length > 1) {
+          const coordinates = pos.path.map(p => [p.lon, p.lat])
+
+          map.addSource(`route-${idx}`, {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates
+              },
+              properties: {}
+            }
+          })
+
+          map.addLayer({
+            id: `route-${idx}`,
+            type: 'line',
+            source: `route-${idx}`,
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#0074D9',
+              'line-width': 3
+            }
+          })
+        }
       })
-        .setLngLat([pos.lng, pos.lat])
-        .setPopup(
-          new mapboxgl.Popup().setHTML(`
-            <strong>${pos.name}</strong><br/>
-            Modelo: ${pos.model}<br/>
-            Data: ${formattedDate}<br/>
-            <span style="color:${pos.stateColor}">Estado: ${pos.stateName}</span><br/>
-            ${extraInfo}
-            ${historyTitle}
-            ${historyHTML}
-          `)
-        )
-        .addTo(map)
-
-      if (highlightName === pos.name) {
-        map.flyTo({ center: [pos.lng, pos.lat], zoom: 15 })
-      }
     })
 
     return () => map.remove()
