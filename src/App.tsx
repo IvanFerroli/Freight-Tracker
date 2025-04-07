@@ -57,9 +57,18 @@ function App() {
   }, [visibleRoutes])
 
   useEffect(() => {
-    localStorage.setItem('startDate', startDate)
-    localStorage.setItem('endDate', endDate)
-  }, [startDate, endDate])
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+  
+    if (start > end) {
+      alert("A data de início não pode ser maior que a data de fim. Ajuste as datas.");
+      setStartDate(endDate);
+    } else {
+      localStorage.setItem('startDate', startDate);
+      localStorage.setItem('endDate', endDate);
+    }
+  }, [startDate, endDate]);
+  
 
   useEffect(() => {
     async function loadData() {

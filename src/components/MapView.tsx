@@ -85,6 +85,20 @@ export function MapView({ positions, highlightName, visibleRoutes, startDate, en
     map.on('load', () => {
       const popups: mapboxgl.Popup[] = []
 
+      if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+        const errorPopup = new mapboxgl.Popup({ closeButton: true, closeOnClick: false })
+          .setHTML(`
+      <strong>Erro:</strong><br/>
+      A data inicial não pode ser maior que a data final. Ajuste o intervalo de datas.
+    `)
+          .addTo(map);
+
+        setTimeout(() => {
+          errorPopup.remove();
+        }, 5000);
+      }
+
+
       function closeAllPopups() {
         popups.forEach(p => p.remove())
       }
@@ -264,5 +278,7 @@ export function MapView({ positions, highlightName, visibleRoutes, startDate, en
     return () => map.remove()
   }, [positions, highlightName, visibleRoutes, startDate, endDate])
 
+
   return <div ref={mapContainer} className="mapbox-container" />
 }
+
