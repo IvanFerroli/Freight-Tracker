@@ -1,5 +1,5 @@
 import './App.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { MapView } from './components/MapView'
 import { Filters } from './components/Filters'
 import filterIcon from './assets/img/filter.png'
@@ -36,7 +36,6 @@ export type FiltersState = {
 
 function App() {
   const [showFilters, setShowFilters] = useState(true)
-  const [showRoutes, setShowRoutes] = useState(true)
   const [positions, setPositions] = useState<PositionData[]>([])
   const [filters, setFilters] = useState<FiltersState>(() => {
     const saved = localStorage.getItem('filters')
@@ -45,10 +44,15 @@ function App() {
       : { model: 'Todos', state: 'Todos', name: '', modelText: '' }
   })
   const [highlightName, setHighlightName] = useState<string | null>(null)
+  const [visibleRoutes, setVisibleRoutes] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     localStorage.setItem('filters', JSON.stringify(filters))
   }, [filters])
+
+  useEffect(() => {
+    localStorage.setItem('visibleRoutes', JSON.stringify(visibleRoutes))
+  }, [visibleRoutes])
 
   useEffect(() => {
     async function loadData() {
@@ -142,6 +146,17 @@ function App() {
       }).filter(Boolean) as PositionData[]
 
       setPositions(result)
+
+      const savedVisibleRoutes = localStorage.getItem('visibleRoutes')
+      if (savedVisibleRoutes) {
+        setVisibleRoutes(JSON.parse(savedVisibleRoutes))
+      } else {
+        const initial = result.reduce((acc, pos) => {
+          acc[pos.name] = false
+          return acc
+        }, {} as Record<string, boolean>)
+        setVisibleRoutes(initial)
+      }
     }
 
     loadData()
@@ -154,6 +169,13 @@ function App() {
     const matchesName = pos.name.toLowerCase().includes(filters.name.toLowerCase())
     return matchesModel && matchesModelText && matchesState && matchesName
   })
+
+  const syncedRoutes = useMemo(() => {
+    return filtered.reduce((acc, pos) => {
+      acc[pos.name] = visibleRoutes?.[pos.name] ?? false
+      return acc
+    }, {} as Record<string, boolean>)
+  }, [filtered, visibleRoutes])
 
   useEffect(() => {
     if (filters.name.trim().length > 0 && filtered.length === 1) {
@@ -183,14 +205,14 @@ function App() {
             setFilters={setFilters}
             names={Array.from(new Set(positions.map((p) => p.name)))}
             show={showFilters}
-            showRoutes={showRoutes}
-            setShowRoutes={setShowRoutes}
+            visibleRoutes={syncedRoutes}
+            setVisibleRoutes={setVisibleRoutes}
           />
 
           <MapView
             positions={filtered}
             highlightName={highlightName}
-            showRoutes={showRoutes}
+            visibleRoutes={syncedRoutes}
           />
         </>
       )}

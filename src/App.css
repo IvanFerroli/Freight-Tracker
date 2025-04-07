@@ -29,4 +29,8 @@ html, body, #root {
   flex-wrap: wrap;
 }
 
-
+.state-history-popup {
+  max-height: 100px;
+  overflow-y: auto;
+  margin-top: 6px;
+}

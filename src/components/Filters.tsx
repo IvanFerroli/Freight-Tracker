@@ -9,8 +9,8 @@ type Props = {
   filters: FiltersState
   setFilters: React.Dispatch<React.SetStateAction<FiltersState>>
   show: boolean
-  showRoutes?: boolean
-  setShowRoutes?: React.Dispatch<React.SetStateAction<boolean>>
+  visibleRoutes?: Record<string, boolean>
+  setVisibleRoutes?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
 }
 
 export function Filters({
@@ -20,8 +20,8 @@ export function Filters({
   names,
   setFilters,
   show,
-  showRoutes,
-  setShowRoutes
+  visibleRoutes,
+  setVisibleRoutes
 }: Props) {
   const [focused, setFocused] = useState(false)
 
@@ -114,15 +114,29 @@ export function Filters({
         )}
       </label>
 
-      {typeof showRoutes === 'boolean' && typeof setShowRoutes === 'function' && (
-        <label>
-          <input
-            type="checkbox"
-            checked={showRoutes}
-            onChange={(e) => setShowRoutes(e.target.checked)}
-          />
-          &nbsp;Mostrar rotas
-        </label>
+      {visibleRoutes && setVisibleRoutes && (
+        <details className="routes-dropdown">
+          <summary>Mostrar rotas</summary>
+          <ul>
+            {Object.entries(visibleRoutes).map(([name, checked]) => (
+              <li key={name}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() =>
+                      setVisibleRoutes(prev => ({
+                        ...prev,
+                        [name]: !prev[name]
+                      }))
+                    }
+                  />
+                  &nbsp;{name}
+                </label>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   )

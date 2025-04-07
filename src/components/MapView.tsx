@@ -18,7 +18,7 @@ type PositionData = {
 type Props = {
   positions: PositionData[]
   highlightName?: string | null
-  showRoutes: boolean
+  visibleRoutes?: Record<string, boolean>
 }
 
 const hourlyRates: Record<string, number> = {
@@ -66,21 +66,25 @@ function calculateProductivityAndEarnings(history: { name: string; date: string 
   return { productivity, ganho }
 }
 
-export function MapView({ positions, highlightName, showRoutes }: Props) {
+export function MapView({ positions, highlightName, visibleRoutes }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!mapContainer.current) return
 
+    const validPositions = positions.filter(p => p && p.lat !== undefined && p.lng !== undefined)
+    const first = validPositions.at(0)
+    const center: [number, number] = first ? [first.lng, first.lat] : [-51.9253, -14.2350]
+
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: positions.length > 0 ? [positions[0].lng, positions[0].lat] : [-51.9253, -14.2350],
+      center,
       zoom: 13,
     })
 
     map.on('load', () => {
-      positions.forEach((pos, idx) => {
+      validPositions.forEach((pos, idx) => {
         const formattedDate = new Date(pos.date).toLocaleString('pt-BR', {
           day: '2-digit',
           month: '2-digit',
@@ -97,17 +101,17 @@ export function MapView({ positions, highlightName, showRoutes }: Props) {
         const historyHTML = pos.stateHistory?.length
           ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
               ${pos.stateHistory
-                .map(entry => {
-                  const formatted = new Date(entry.date).toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })
-                  return `${formatted} - ${entry.name}`
-                })
-                .join('<br/>')}
+            .map(entry => {
+              const formatted = new Date(entry.date).toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+              return `${formatted} - ${entry.name}`
+            })
+            .join('<br/>')}
             </div>`
           : ''
 
@@ -138,8 +142,11 @@ export function MapView({ positions, highlightName, showRoutes }: Props) {
           map.flyTo({ center: [pos.lng, pos.lat], zoom: 15 })
         }
 
-        if (showRoutes && pos.path && pos.path.length > 1) {
-          const coordinates = pos.path.map(p => [p.lon, p.lat])
+        const shouldShowRoute =
+          visibleRoutes?.[pos.name] === true && pos.path && pos.path.length > 1
+
+        if (shouldShowRoute) {
+          const coordinates = (pos.path ?? []).map(p => [p.lon, p.lat])
 
           map.addSource(`route-${idx}`, {
             type: 'geojson',
@@ -171,7 +178,7 @@ export function MapView({ positions, highlightName, showRoutes }: Props) {
     })
 
     return () => map.remove()
-  }, [positions, highlightName, showRoutes])
+  }, [positions, highlightName, visibleRoutes])
 
   return <div ref={mapContainer} className="mapbox-container" />
 }
