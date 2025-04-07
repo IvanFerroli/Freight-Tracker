@@ -21,6 +21,7 @@
     left: 3.5rem;
     display: flex;
     flex-wrap: wrap;
+    align-items: center; /* 🆕 garante alinhamento vertical */
     gap: 1rem;
     background: rgba(255, 255, 255, 0.95);
     padding: 0.75rem 1rem;
@@ -29,6 +30,12 @@
     z-index: 20;
     width: fit-content;
     max-width: calc(100% - 4.5rem);
+  }
+  
+  .filters-container label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
   }
   
   .name-input-wrapper {
@@ -60,3 +67,8 @@
     gap: 1rem;
     margin: 1rem;
   }
+  
+  .name-input-wrapper input {
+    width: 120px;
+  }
+  

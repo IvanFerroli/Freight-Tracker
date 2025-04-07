@@ -143,28 +143,30 @@ export function Filters({
       </label>
 
       {visibleRoutes && setVisibleRoutes && (
-        <details className="routes-dropdown">
-          <summary>Mostrar rotas</summary>
-          <ul>
+        <label>
+          Mostrar rotas:&nbsp;
+          <select
+            onChange={(e) => {
+              const name = e.target.value
+              if (name && visibleRoutes[name] !== undefined) {
+                setVisibleRoutes(prev => ({ ...prev, [name]: !prev[name] }))
+              }
+            }}
+            value=""
+            title="Selecione um equipamento para mostrar ou ocultar sua rota"
+          >
+            <option value="" disabled>
+              {Object.keys(visibleRoutes).length > 0
+                ? 'Selecione uma rota'
+                : 'Nenhuma rota no período'}
+            </option>
             {Object.entries(visibleRoutes).map(([name, checked]) => (
-              <li key={name}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() =>
-                      setVisibleRoutes(prev => ({
-                        ...prev,
-                        [name]: !prev[name]
-                      }))
-                    }
-                  />
-                  &nbsp;{name}
-                </label>
-              </li>
+              <option key={name} value={name}>
+                {checked ? 'Ocultar' : 'Mostrar'} - {name}
+              </option>
             ))}
-          </ul>
-        </details>
+          </select>
+        </label>
       )}
     </div>
   )
