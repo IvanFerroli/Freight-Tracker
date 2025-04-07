@@ -11,6 +11,10 @@ type Props = {
   show: boolean
   visibleRoutes?: Record<string, boolean>
   setVisibleRoutes?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+  startDate: string
+  endDate: string
+  setStartDate: (date: string) => void
+  setEndDate: (date: string) => void
 }
 
 export function Filters({
@@ -21,7 +25,11 @@ export function Filters({
   setFilters,
   show,
   visibleRoutes,
-  setVisibleRoutes
+  setVisibleRoutes,
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate
 }: Props) {
   const [focused, setFocused] = useState(false)
 
@@ -112,6 +120,26 @@ export function Filters({
             ))}
           </ul>
         )}
+      </label>
+
+      <label>
+        Início:&nbsp;
+        <input
+          type="date"
+          value={startDate}
+          onChange={e => setStartDate(e.target.value)}
+          title="Data inicial para filtrar posições"
+        />
+      </label>
+
+      <label>
+        Fim:&nbsp;
+        <input
+          type="date"
+          value={endDate}
+          onChange={e => setEndDate(e.target.value)}
+          title="Data final para filtrar posições"
+        />
       </label>
 
       {visibleRoutes && setVisibleRoutes && (

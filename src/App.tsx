@@ -45,6 +45,8 @@ function App() {
   })
   const [highlightName, setHighlightName] = useState<string | null>(null)
   const [visibleRoutes, setVisibleRoutes] = useState<Record<string, boolean>>({})
+  const [startDate, setStartDate] = useState<string>(() => localStorage.getItem('startDate') || '')
+  const [endDate, setEndDate] = useState<string>(() => localStorage.getItem('endDate') || '')
 
   useEffect(() => {
     localStorage.setItem('filters', JSON.stringify(filters))
@@ -53,6 +55,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem('visibleRoutes', JSON.stringify(visibleRoutes))
   }, [visibleRoutes])
+
+  useEffect(() => {
+    localStorage.setItem('startDate', startDate)
+    localStorage.setItem('endDate', endDate)
+  }, [startDate, endDate])
 
   useEffect(() => {
     async function loadData() {
@@ -162,13 +169,23 @@ function App() {
     loadData()
   }, [])
 
-  const filtered = positions.filter((pos) => {
+  const filtered = positions.map((pos) => {
     const matchesModel = filters.model === 'Todos' || pos.model === filters.model
     const matchesModelText = pos.model.toLowerCase().includes(filters.modelText.toLowerCase())
     const matchesState = filters.state === 'Todos' || pos.stateName === filters.state
     const matchesName = pos.name.toLowerCase().includes(filters.name.toLowerCase())
-    return matchesModel && matchesModelText && matchesState && matchesName
-  })
+    const matchesDate = (!startDate || new Date(pos.date) >= new Date(startDate)) &&
+                        (!endDate || new Date(pos.date) <= new Date(endDate))
+
+    const filteredPath = pos.path?.filter(p => {
+      const date = new Date(p.date)
+      return (!startDate || date >= new Date(startDate)) && (!endDate || date <= new Date(endDate))
+    }) || []
+
+    return matchesModel && matchesModelText && matchesState && matchesName && matchesDate
+      ? { ...pos, path: filteredPath }
+      : null
+  }).filter(Boolean) as PositionData[]
 
   const syncedRoutes = useMemo(() => {
     return filtered.reduce((acc, pos) => {
@@ -207,6 +224,10 @@ function App() {
             show={showFilters}
             visibleRoutes={syncedRoutes}
             setVisibleRoutes={setVisibleRoutes}
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
           />
 
           <MapView
