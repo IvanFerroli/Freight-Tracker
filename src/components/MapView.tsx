@@ -83,38 +83,41 @@ export function MapView({ positions, highlightName, visibleRoutes, startDate, en
     })
 
     map.on('load', () => {
+      const popups: mapboxgl.Popup[] = []
+
+      function closeAllPopups() {
+        popups.forEach(p => p.remove())
+      }
+
       validPositions.forEach((pos, idx) => {
         const filteredHistory = (pos.stateHistory ?? []).filter(entry => {
           const d = new Date(entry.date)
           return (!startDate || d >= new Date(startDate)) &&
-                 (!endDate || d <= new Date(endDate))
+            (!endDate || d <= new Date(endDate))
         })
 
         const routePoints = (pos.path ?? []).filter(p => {
           const d = new Date(p.date)
           return (!startDate || d >= new Date(startDate)) &&
-                 (!endDate || d <= new Date(endDate))
+            (!endDate || d <= new Date(endDate))
         })
 
         const lastState = filteredHistory.at(-1)
         const lastRoute = routePoints.at(-1)
-
         const baseDate = lastRoute?.date ?? lastState?.date
+
         const formattedDate = baseDate
           ? new Date(baseDate).toLocaleString('pt-BR', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })
           : '<em>Sem data no intervalo</em>'
 
         const stateName = lastState?.name ?? 'Sem estado'
         const stateColor =
           stateName === 'Operando' ? '#2ecc71' :
-          stateName === 'Parado' ? '#f1c40f' :
-          stateName === 'Manutenção' ? '#e74c3c' : '#999'
+            stateName === 'Parado' ? '#f1c40f' :
+              stateName === 'Manutenção' ? '#e74c3c' : '#999'
 
         const { productivity, ganho } = filteredHistory.length >= 2
           ? calculateProductivityAndEarnings(filteredHistory)
@@ -122,43 +125,114 @@ export function MapView({ positions, highlightName, visibleRoutes, startDate, en
 
         const historyHTML = filteredHistory.length
           ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
-              <strong>Histórico:</strong><br/>
-              ${filteredHistory.map(entry => {
-                const formatted = new Date(entry.date).toLocaleString('pt-BR', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })
-                return `${formatted} - ${entry.name}`
-              }).join('<br/>')}
-            </div>`
+               <div style="position: sticky; top: 0; background: white;">
+                 <strong>Histórico:</strong>
+               </div><br/>${filteredHistory.map(entry => {
+            const formatted = new Date(entry.date).toLocaleString('pt-BR', {
+              day: '2-digit', month: '2-digit', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            })
+            return `${formatted} - ${entry.name}`
+          }).join('<br/>')}
+             </div>`
           : '<em>Sem histórico no intervalo selecionado.</em>'
 
         const extraInfo = `
           <br/><strong>Produtividade:</strong> ${productivity}%<br/>
           <strong>Ganho estimado:</strong> ${ganho.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-          })}<br/>
+          style: 'currency', currency: 'BRL'
+        })}<br/>
         `
 
-        new mapboxgl.Marker({
+        const popup = new mapboxgl.Popup({ closeButton: true, closeOnClick: false })
+          .setHTML(`
+            <strong>${pos.name}</strong><br/>
+            Modelo: ${pos.model}<br/>
+            Data: ${formattedDate}<br/>
+            <span style="color:${stateColor}">Estado: ${stateName}</span><br/>
+            ${extraInfo}
+            ${historyHTML}
+          `)
+
+        const marker = new mapboxgl.Marker({
           color: highlightName === pos.name ? '#000000' : stateColor
         })
           .setLngLat([pos.lng, pos.lat])
-          .setPopup(
-            new mapboxgl.Popup().setHTML(`
-              <strong>${pos.name}</strong><br/>
-              Modelo: ${pos.model}<br/>
-              Data: ${formattedDate}<br/>
-              <span style="color:${stateColor}">Estado: ${stateName}</span><br/>
-              ${extraInfo}
-              ${historyHTML}
-            `)
-          )
+          .setPopup(popup)
           .addTo(map)
+
+        let pinned = false;
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+        const el = marker.getElement();
+        const popupEl = popup.getElement();
+        marker.setPopup(popup);
+
+        el.addEventListener('mouseenter', () => {
+          if (!pinned) {
+            if (timeoutId) clearTimeout(timeoutId);
+            closeAllPopups();
+            popup.addTo(map);
+          }
+        });
+
+        el.addEventListener('mouseleave', (e) => {
+          if (!pinned && popupEl) {
+            const related = e.relatedTarget as Node;
+            timeoutId = setTimeout(() => {
+              if (
+                !popupEl.contains(document.activeElement) &&
+                !popupEl.contains(related)
+              ) {
+                popup.remove();
+              }
+            }, 500);
+          }
+        });
+
+        el.addEventListener('click', () => {
+          pinned = !pinned;
+
+          if (pinned) {
+            if (timeoutId) clearTimeout(timeoutId);
+            closeAllPopups();
+            popup.addTo(map);
+
+            const handleClickOutside = (e: MouseEvent) => {
+              const target = e.target as Node;
+              if (
+                popupEl &&
+                !popupEl.contains(target) &&
+                !el.contains(target)
+              ) {
+                popup.remove();
+                pinned = false;
+                document.removeEventListener('click', handleClickOutside);
+              }
+            };
+
+            document.addEventListener('click', handleClickOutside);
+          } else {
+            popup.remove();
+          }
+        });
+
+        popupEl?.addEventListener('mouseenter', () => {
+          if (!pinned && timeoutId) {
+            clearTimeout(timeoutId);
+          }
+        });
+
+        popupEl?.addEventListener('mouseleave', (e) => {
+          if (!pinned && !el.contains(e.relatedTarget as Node)) {
+            popup.remove();
+          }
+        });
+
+        popups.push(popup);
+
+
+
 
         if (highlightName === pos.name) {
           map.flyTo({ center: [pos.lng, pos.lat], zoom: 15 })
@@ -178,18 +252,14 @@ export function MapView({ positions, highlightName, visibleRoutes, startDate, en
             id: `route-${idx}`,
             type: 'line',
             source: `route-${idx}`,
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round'
-            },
-            paint: {
-              'line-color': '#0074D9',
-              'line-width': 3
-            }
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: { 'line-color': '#0074D9', 'line-width': 3 }
           })
         }
       })
     })
+
+
 
     return () => map.remove()
   }, [positions, highlightName, visibleRoutes, startDate, endDate])
