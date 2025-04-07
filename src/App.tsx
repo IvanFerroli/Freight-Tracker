@@ -90,35 +90,26 @@ function App() {
           }
         }) ?? []
 
-        const stateName = state?.name ?? 'Estado desconhecido'
-        const stateColor = state?.color ?? '#e74c3c'
-
-        let displayStateName = stateName
-        if (stateColor === '#2ecc71') {
-          displayStateName = 'Operando'
-        } else if (stateColor === '#f1c40f') {
-          displayStateName = 'Parado'
-        } else if (stateColor === '#e74c3c') {
-          displayStateName = 'Manutenção'
-        } else {
-          displayStateName = 'Estado Desconhecido'
-        }
+        const filteredStateHistory = fullStateHistory.filter(entry => {
+          const d = new Date(entry.date)
+          return (!startDate || d >= new Date(startDate)) && (!endDate || d <= new Date(endDate))
+        })
 
         let totalHoras = 0
         let horasOperando = 0
         let ganhoEstimado = 0
 
-        if (fullStateHistory.length >= 2) {
-          for (let i = 0; i < fullStateHistory.length - 1; i++) {
-            const atual = new Date(fullStateHistory[i].date)
-            const proxima = new Date(fullStateHistory[i + 1].date)
+        if (filteredStateHistory.length >= 2) {
+          for (let i = 0; i < filteredStateHistory.length - 1; i++) {
+            const atual = new Date(filteredStateHistory[i].date)
+            const proxima = new Date(filteredStateHistory[i + 1].date)
             const horas = (proxima.getTime() - atual.getTime()) / 1000 / 60 / 60
             totalHoras += horas
 
-            if (fullStateHistory[i].name === 'Operando') {
+            if (filteredStateHistory[i].name === 'Operando') {
               horasOperando += horas
               ganhoEstimado += horas * 100
-            } else if (fullStateHistory[i].name === 'Parado') {
+            } else if (filteredStateHistory[i].name === 'Parado') {
               ganhoEstimado += horas * 30
             }
           }
@@ -126,29 +117,33 @@ function App() {
 
         const produtividade = totalHoras > 0 ? (horasOperando / totalHoras) * 100 : 0
 
-        const formattedHistory = fullStateHistory.map(entry => ({
-          name: entry.name,
-          date: new Date(entry.date).toLocaleString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
-        }))
+        const lastDateFromPath = path.filter(p => {
+          const d = new Date(p.date)
+          return (!startDate || d >= new Date(startDate)) && (!endDate || d <= new Date(endDate))
+        }).at(-1)?.date
+
+        const lastDateFromState = filteredStateHistory.at(-1)?.date
+
+        const finalDate = lastDateFromPath || lastDateFromState || position.date
+
+        const displayStateName = filteredStateHistory.at(-1)?.name || state?.name || 'Estado desconhecido'
+        const stateColor = state?.color ?? '#e74c3c'
 
         return {
           name: equipment.name,
           model: model?.name ?? 'Modelo desconhecido',
-          date: position.date,
+          date: finalDate,
           lat: position.lat,
           lng: position.lon,
           stateName: displayStateName,
           stateColor: stateColor,
-          stateHistory: formattedHistory,
+          stateHistory: filteredStateHistory,
           productivity: Math.round(produtividade),
           estimatedEarnings: Math.round(ganhoEstimado),
-          path: path
+          path: path.filter(p => {
+            const d = new Date(p.date)
+            return (!startDate || d >= new Date(startDate)) && (!endDate || d <= new Date(endDate))
+          })
         }
       }).filter(Boolean) as PositionData[]
 
@@ -167,7 +162,7 @@ function App() {
     }
 
     loadData()
-  }, [])
+  }, [startDate, endDate])
 
   const filtered = positions.map((pos) => {
     const matchesModel = filters.model === 'Todos' || pos.model === filters.model
@@ -177,13 +172,8 @@ function App() {
     const matchesDate = (!startDate || new Date(pos.date) >= new Date(startDate)) &&
                         (!endDate || new Date(pos.date) <= new Date(endDate))
 
-    const filteredPath = pos.path?.filter(p => {
-      const date = new Date(p.date)
-      return (!startDate || date >= new Date(startDate)) && (!endDate || date <= new Date(endDate))
-    }) || []
-
     return matchesModel && matchesModelText && matchesState && matchesName && matchesDate
-      ? { ...pos, path: filteredPath }
+      ? pos
       : null
   }).filter(Boolean) as PositionData[]
 
@@ -234,6 +224,8 @@ function App() {
             positions={filtered}
             highlightName={highlightName}
             visibleRoutes={syncedRoutes}
+            startDate={startDate}
+            endDate={endDate}
           />
         </>
       )}

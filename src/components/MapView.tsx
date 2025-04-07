@@ -19,6 +19,8 @@ type Props = {
   positions: PositionData[]
   highlightName?: string | null
   visibleRoutes?: Record<string, boolean>
+  startDate?: string
+  endDate?: string
 }
 
 const hourlyRates: Record<string, number> = {
@@ -34,10 +36,7 @@ function calculateProductivityAndEarnings(history: { name: string; date: string 
     manutencao: 'Manutenção',
   }
 
-  const sorted = [...history].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  )
-
+  const sorted = [...history].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
   const durations: Record<string, number> = {}
 
   for (let i = 0; i < sorted.length - 1; i++) {
@@ -59,14 +58,14 @@ function calculateProductivityAndEarnings(history: { name: string; date: string 
 
   let ganho = 0
   for (const [state, hours] of Object.entries(durations)) {
-    const rate = typeof hourlyRates[state] === 'number' ? hourlyRates[state] : 0
+    const rate = hourlyRates[state] ?? 0
     ganho += rate * hours
   }
 
   return { productivity, ganho }
 }
 
-export function MapView({ positions, highlightName, visibleRoutes }: Props) {
+export function MapView({ positions, highlightName, visibleRoutes, startDate, endDate }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -77,7 +76,7 @@ export function MapView({ positions, highlightName, visibleRoutes }: Props) {
     const center: [number, number] = first ? [first.lng, first.lat] : [-51.9253, -14.2350]
 
     const map = new mapboxgl.Map({
-      container: mapContainer.current,
+      container: mapContainer.current as HTMLDivElement,
       style: 'mapbox://styles/mapbox/streets-v11',
       center,
       zoom: 13,
@@ -85,44 +84,68 @@ export function MapView({ positions, highlightName, visibleRoutes }: Props) {
 
     map.on('load', () => {
       validPositions.forEach((pos, idx) => {
-        const formattedDate = new Date(pos.date).toLocaleString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
+        const filteredHistory = (pos.stateHistory ?? []).filter(entry => {
+          const d = new Date(entry.date)
+          return (!startDate || d >= new Date(startDate)) &&
+                 (!endDate || d <= new Date(endDate))
         })
 
-        const { productivity, ganho } = pos.stateHistory?.length
-          ? calculateProductivityAndEarnings(pos.stateHistory)
+        const routePoints = (pos.path ?? []).filter(p => {
+          const d = new Date(p.date)
+          return (!startDate || d >= new Date(startDate)) &&
+                 (!endDate || d <= new Date(endDate))
+        })
+
+        const lastState = filteredHistory.at(-1)
+        const lastRoute = routePoints.at(-1)
+
+        const baseDate = lastRoute?.date ?? lastState?.date
+        const formattedDate = baseDate
+          ? new Date(baseDate).toLocaleString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '<em>Sem data no intervalo</em>'
+
+        const stateName = lastState?.name ?? 'Sem estado'
+        const stateColor =
+          stateName === 'Operando' ? '#2ecc71' :
+          stateName === 'Parado' ? '#f1c40f' :
+          stateName === 'Manutenção' ? '#e74c3c' : '#999'
+
+        const { productivity, ganho } = filteredHistory.length >= 2
+          ? calculateProductivityAndEarnings(filteredHistory)
           : { productivity: 0, ganho: 0 }
 
-        const historyTitle = pos.stateHistory?.length ? `<strong>Histórico:</strong><br/>` : ''
-        const historyHTML = pos.stateHistory?.length
+        const historyHTML = filteredHistory.length
           ? `<div style="max-height: 100px; overflow-y: auto; margin-top: 6px;">
-              ${pos.stateHistory
-            .map(entry => {
-              const formatted = new Date(entry.date).toLocaleString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })
-              return `${formatted} - ${entry.name}`
-            })
-            .join('<br/>')}
+              <strong>Histórico:</strong><br/>
+              ${filteredHistory.map(entry => {
+                const formatted = new Date(entry.date).toLocaleString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })
+                return `${formatted} - ${entry.name}`
+              }).join('<br/>')}
             </div>`
-          : ''
+          : '<em>Sem histórico no intervalo selecionado.</em>'
 
         const extraInfo = `
           <br/><strong>Produtividade:</strong> ${productivity}%<br/>
-          <strong>Ganho estimado:</strong> ${ganho.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-<br/>
+          <strong>Ganho estimado:</strong> ${ganho.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+          })}<br/>
         `
 
         new mapboxgl.Marker({
-          color: highlightName === pos.name ? '#000000' : pos.stateColor
+          color: highlightName === pos.name ? '#000000' : stateColor
         })
           .setLngLat([pos.lng, pos.lat])
           .setPopup(
@@ -130,9 +153,8 @@ export function MapView({ positions, highlightName, visibleRoutes }: Props) {
               <strong>${pos.name}</strong><br/>
               Modelo: ${pos.model}<br/>
               Data: ${formattedDate}<br/>
-              <span style="color:${pos.stateColor}">Estado: ${pos.stateName}</span><br/>
+              <span style="color:${stateColor}">Estado: ${stateName}</span><br/>
               ${extraInfo}
-              ${historyTitle}
               ${historyHTML}
             `)
           )
@@ -142,24 +164,16 @@ export function MapView({ positions, highlightName, visibleRoutes }: Props) {
           map.flyTo({ center: [pos.lng, pos.lat], zoom: 15 })
         }
 
-        const shouldShowRoute =
-          visibleRoutes?.[pos.name] === true && pos.path && pos.path.length > 1
-
-        if (shouldShowRoute) {
-          const coordinates = (pos.path ?? []).map(p => [p.lon, p.lat])
-
+        if (visibleRoutes?.[pos.name] && routePoints.length > 1) {
+          const coordinates = routePoints.map(p => [p.lon, p.lat])
           map.addSource(`route-${idx}`, {
             type: 'geojson',
             data: {
               type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates
-              },
+              geometry: { type: 'LineString', coordinates },
               properties: {}
             }
           })
-
           map.addLayer({
             id: `route-${idx}`,
             type: 'line',
@@ -178,7 +192,7 @@ export function MapView({ positions, highlightName, visibleRoutes }: Props) {
     })
 
     return () => map.remove()
-  }, [positions, highlightName, visibleRoutes])
+  }, [positions, highlightName, visibleRoutes, startDate, endDate])
 
   return <div ref={mapContainer} className="mapbox-container" />
 }
