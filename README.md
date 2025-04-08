@@ -125,4 +125,10 @@ LINK DO VIDEO
 
 https://www.loom.com/share/713a65a69fc24005b41c2499af54206b?sid=c8270da8-4fa9-4479-a4f1-6f30b8cda41e
 
+---
+
+LINK DO DEPLOY
+
+https://teste-frontend-v4-git-teste-ivan-5302ef-ivans-projects-1c591bc8.vercel.app?_vercel_share=s9fdguMrvR6VUs4Q8OEyvOUroHbTAzdG
+
 ✨ Desenvolvido por Ivanilson Ferreira com carinho e dedicação.
