@@ -1,6 +1,6 @@
-# 🚜 AIKO Tracker
+# 🚚 Freight Tracker (AIKO Case Reimagined)
 
-Bem-vindo ao **AIKO Tracker**, uma aplicação web interativa desenvolvida para monitoramento e visualização eficiente de equipamentos no mapa, com recursos analíticos avançados e interações fluidas. Este projeto foi criado como solução técnica para o desafio proposto pela AIKO.
+Bem-vindo ao **Freight Tracker**, uma aplicação web interativa desenvolvida para monitoramento e visualização eficiente de equipamentos no mapa, com recursos analíticos avançados e interações fluidas. Este projeto foi originalmente criado como solução técnica para um desafio proposto pela AIKO, e desde então foi expandido e personalizado como um projeto de portfólio.
 
 ---
 
@@ -117,7 +117,8 @@ Acesse `http://localhost:5173` no navegador para visualizar o projeto.
 
 ## 🙌 Agradecimentos
 
-Obrigado à AIKO pela oportunidade incrível de realizar este desafio, que proporcionou crescimento e aprendizados valiosos. Estou disponível para quaisquer esclarecimentos adicionais e feedbacks.
+Este projeto foi originalmente desenvolvido como parte de um desafio técnico proposto pela AIKO. A experiência proporcionou aprendizados valiosos e a oportunidade de explorar tecnologias modernas em contexto real.
+
 
 ---
 
